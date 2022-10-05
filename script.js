@@ -37,22 +37,28 @@ function playerMove(id) {
         }
     }
     if (document.getElementById(id).classList.contains('move')) {
-        move(document.getElementsByClassName('selected')[0].id, id)
         if (next == 0) {
             next = 1;
         } else {
             next = 0;
         }
+        move(document.getElementsByClassName('selected')[0].id, id)
     }
 }
 
 function deselect(id) {
     document.getElementById(id).classList.remove('selected');
-    for (let i = 0; i < document.getElementsByClassName(players[next]).length; i++) {
-        document.getElementsByClassName(players[next])[i].classList.add('selectable');
-    }
     while (document.getElementsByClassName('move').length > 0) {
         document.getElementsByClassName('move')[0].classList.remove('move');
+    }
+    while (document.getElementsByClassName('selectable').length > 0) {
+        document.getElementsByClassName('selectable')[0].classList.remove('selectable');
+    }
+    while (document.getElementsByClassName('hit').length > 0) {
+        document.getElementsByClassName('hit')[0].classList.remove('hit');
+    }
+    for (let i = 0; i < document.getElementsByClassName(players[next]).length; i++) {
+        document.getElementsByClassName(players[next])[i].classList.add('selectable');
     }
 }
 
@@ -61,18 +67,20 @@ function move(from, to) {
     n = document.getElementById(to);
     if (o.classList.contains('bp')) {
         n.classList.add('bp');
+        n.classList.remove('wp');
         o.classList.remove('bp');
     }
     if (o.classList.contains('wp')) {
         n.classList.add('wp');
+        n.classList.remove('bp');
         o.classList.remove('wp');
     }
     n.innerHTML = o.innerHTML;
     o.classList.remove('selected');
     o.classList.remove('selectable');
+    o.classList.remove('hit');
     n.classList.remove('move');
     o.innerHTML = empty;
-    n.classList.add('selectable');
     deselect(to);
 }
 
@@ -84,61 +92,86 @@ function calcMoves(id) {
     var y = parseInt(id.split('.')[0]);
     let xoff = x;
     let yoff = y;
-    var moves = [];
     switch (document.getElementById(id).innerHTML) {
         case pieces[0]:
+            calcMove(y, x, +0, +1, -1, +0);
+            calcMove(y, x, +0, -1, -1, +0);
+            calcMove(y, x, +1, +0, -1, +0);
+            calcMove(y, x, -1, +0, -1, +0);
+            calcMove(y, x, +1, +1, -1, +0);
+            calcMove(y, x, -1, -1, -1, +0);
+            calcMove(y, x, +1, -1, -1, +0);
+            calcMove(y, x, -1, +1, -1, +0);
             break;
         case pieces[1]:
+            calcMove(y, x, +0, +1);
+            calcMove(y, x, +0, -1);
+            calcMove(y, x, +1, +0);
+            calcMove(y, x, -1, +0);
+            calcMove(y, x, +1, +1);
+            calcMove(y, x, -1, -1);
+            calcMove(y, x, +1, -1);
+            calcMove(y, x, -1, +1);
             break;
         case pieces[2]:
-            for (let i = 0; i < 8 - x; i++) {
-                xoff += 1;
-                if (document.getElementById(yoff + '.' + xoff)) {
-                    if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
-                        moves.push(yoff + '.' + xoff)
-                    } else {
-                        break;
-                    }
-                }
-            }
-            xoff = x;
-            for (let i = 0; i < 8 - x; i++) {
-                xoff -= 1;
-                console.log(yoff + '.' + xoff)
-                if (document.getElementById(yoff + '.' + xoff)) {
-                    if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
-                        moves.push(yoff + '.' + xoff)
-                    } else {
-                        break;
-                    }
-                }
-            }
-            xoff = x;
-            for (let j = -8; j < 8 - y; j++) {
-                yoff += 1;
-                if (document.getElementById(yoff + '.' + xoff)) {
-                    if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
-                        moves.push(yoff + '.' + xoff)
-                    } else {
-                        break;
-                    }
-                }
-            }
+            calcMove(y, x, +0, +1);
+            calcMove(y, x, +0, -1);
+            calcMove(y, x, +1, +0);
+            calcMove(y, x, -1, +0);
             break;
         case pieces[3]:
-            break
+            calcMove(y, x, +1, +1);
+            calcMove(y, x, -1, -1);
+            calcMove(y, x, +1, -1);
+            calcMove(y, x, -1, +1);
+            break;
         case pieces[4]:
             break;
         case pieces[5]:
-            console.log(yoff + '.' + xoff)
-            yoff += 1;
-            moves.push(yoff + '.' + xoff)
+            if (y == '2' || y == '7') {
+                yoff += ((next * -2) + 1) * 2;
+                if (document.getElementById(yoff + '.' + xoff).innerHTML == empty && document.getElementById(String(y + ((next * -2) + 1)) + '.' + xoff).innerHTML == empty) {
+                    document.getElementById(yoff + '.' + xoff).classList.add('move');
+                }
+            }
+            yoff = y;
+            yoff += (next * -2) + 1;
+            if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
+                document.getElementById(yoff + '.' + xoff).classList.add('move');
+            }
+            xoff += 1;
+            if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+                document.getElementById(yoff + '.' + xoff).classList.add('move');
+                document.getElementById(yoff + '.' + xoff).classList.add('hit');
+            }
+            xoff = x;
+            xoff -= 1;
+            if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+                document.getElementById(yoff + '.' + xoff).classList.add('move');
+                document.getElementById(yoff + '.' + xoff).classList.add('hit');
+            }
             break;
     }
-    for (let k = 0; k < moves.length; k++) {
-        document.getElementById(moves[k]).classList.add('move');
+}
+
+function calcMove(y, x, yz, xz, start = -8, end = 8) {
+    var xoff = x;
+    var yoff = y;
+    for (let i = start; i < end; i++) {
+        xoff += xz;
+        yoff += yz;
+        if (document.getElementById(yoff + '.' + xoff)) {
+            if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
+                document.getElementById(yoff + '.' + xoff).classList.add('move');
+            } else if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+                document.getElementById(yoff + '.' + xoff).classList.add('move');
+                document.getElementById(yoff + '.' + xoff).classList.add('hit');
+                break;
+            } else {
+                break;
+            }
+        }
     }
-    return moves
 }
 
 function setCell(id, to, name, add = true) {
@@ -269,6 +302,7 @@ function setBoard() {
         document.getElementById('1.' + (i + 1)).classList.add('selectable');
         document.getElementById('2.' + (i + 1)).classList.add('selectable');
     }
+    next = 0;
 }
 
 function winCheck() {

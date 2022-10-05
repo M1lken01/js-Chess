@@ -8,6 +8,7 @@
     --clrAlpha: rgba(0, 0, 0, 0);
     --clrAccent1: rgb(16, 119, 55);
     --clrAccent2: rgb(50, 105, 157);
+    --clrAccent3: rgb(146, 26, 26);
 }
 
 html {
@@ -131,6 +132,17 @@ td {
     box-shadow: 0px 0px 2px 3px var(--clrAccent2) inset;
     -webkit-box-shadow: 0px 0px 2px 3px var(--clrAccent2) inset;
     -moz-box-shadow: 0px 0px 2px 3px var(--clrAccent2) inset;
+    transition: 0.2s;
+    -webkit-transition: 0.2s;
+    -moz-transition: 0.2s;
+    -ms-transition: 0.2s;
+    -o-transition: 0.2s;
+}
+
+.hit {
+    box-shadow: 0px 0px 2px 3px var(--clrAccent3) inset;
+    -webkit-box-shadow: 0px 0px 2px 3px var(--clrAccent3) inset;
+    -moz-box-shadow: 0px 0px 2px 3px var(--clrAccent3) inset;
     transition: 0.2s;
     -webkit-transition: 0.2s;
     -moz-transition: 0.2s;
