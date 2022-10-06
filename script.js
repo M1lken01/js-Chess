@@ -6,9 +6,10 @@ const setup = [
     [5, 5, 5, 5, 5, 5, 5, 5]
 ];
 const players = ['wp', 'bp'];
+const p2word = ['White', 'Black'];
 
 var next = 0;
-var game = 0;
+var won = -1;
 var clearIds = [];
 var bombIds = [];
 var placedBombs = 0;
@@ -24,30 +25,31 @@ document.addEventListener("contextmenu", function(e) {
 }, false);
 
 function playerMove(id) {
-    if (document.getElementById(id).classList.contains('selectable')) {
-        if (document.getElementById(id).classList.contains('selectable') && document.getElementById(id).classList.contains('selected')) {
-            deselect(id);
-        } else {
-            document.getElementById(id).classList.add('selected')
-            while (document.getElementsByClassName('selectable').length > 0) {
-                document.getElementsByClassName('selectable')[0].classList.remove('selectable');
+    if (won == -1) {
+        if (document.getElementById(id).classList.contains('selectable')) {
+            if (document.getElementById(id).classList.contains('selected')) {
+                deselect();
+            } else {
+                if (document.getElementsByClassName('selected').length > 0) {
+                    document.getElementsByClassName('selected')[0].classList.remove('selected')
+                }
+                document.getElementById(id).classList.add('selected')
+                document.getElementById(id).classList.add('selectable');
+                calcMoves(id);
             }
-            document.getElementById(id).classList.add('selectable');
-            calcMoves(id);
         }
-    }
-    if (document.getElementById(id).classList.contains('move')) {
-        if (next == 0) {
-            next = 1;
-        } else {
-            next = 0;
+        if (document.getElementById(id).classList.contains('move')) {
+            next = next ^ 1;
+            document.getElementById('gamestate').innerHTML = p2word[next] + ' is next.';
+            move(document.getElementsByClassName('selected')[0].id, id)
         }
-        move(document.getElementsByClassName('selected')[0].id, id)
     }
 }
 
-function deselect(id) {
-    document.getElementById(id).classList.remove('selected');
+function deselect() {
+    while (document.getElementsByClassName('selected').length > 0) {
+        document.getElementsByClassName('selected')[0].classList.remove('selected');
+    }
     while (document.getElementsByClassName('move').length > 0) {
         document.getElementsByClassName('move')[0].classList.remove('move');
     }
@@ -57,31 +59,37 @@ function deselect(id) {
     while (document.getElementsByClassName('hit').length > 0) {
         document.getElementsByClassName('hit')[0].classList.remove('hit');
     }
-    for (let i = 0; i < document.getElementsByClassName(players[next]).length; i++) {
-        document.getElementsByClassName(players[next])[i].classList.add('selectable');
+    if (won == -1) {
+        for (let i = 0; i < document.getElementsByClassName(players[next]).length; i++) {
+            document.getElementsByClassName(players[next])[i].classList.add('selectable');
+        }
     }
 }
 
 function move(from, to) {
     o = document.getElementById(from);
     n = document.getElementById(to);
-    if (o.classList.contains('bp')) {
-        n.classList.add('bp');
-        n.classList.remove('wp');
-        o.classList.remove('bp');
-    }
-    if (o.classList.contains('wp')) {
-        n.classList.add('wp');
-        n.classList.remove('bp');
-        o.classList.remove('wp');
-    }
+    is_king = o.innerHTML;
+    n.classList.add(players[next ^ 1]);
+    n.classList.remove(players[next]);
+    o.classList.remove(players[next ^ 1]);
     n.innerHTML = o.innerHTML;
     o.classList.remove('selected');
     o.classList.remove('selectable');
     o.classList.remove('hit');
     n.classList.remove('move');
     o.innerHTML = empty;
-    deselect(to);
+    if (is_king) {
+        winCheck();
+    }
+    if ((parseInt(to.split('.')[0]) == '8' || parseInt(to.split('.')[0]) == '1') && n.innerHTML == pieces[5]) {
+        change(to);
+    }
+    deselect();
+}
+
+function change(id) {
+    document.getElementById(id).innerHTML = pieces[1];
 }
 
 function calcMoves(id) {
@@ -126,41 +134,43 @@ function calcMoves(id) {
             calcMove(y, x, -1, +1);
             break;
         case pieces[4]:
+            calcMove(y, x, +2, +1, -1, +0);
+            calcMove(y, x, +2, -1, -1, +0);
+            calcMove(y, x, -2, +1, -1, +0);
+            calcMove(y, x, -2, -1, -1, +0);
+            calcMove(y, x, +1, +2, -1, +0);
+            calcMove(y, x, +1, -2, -1, +0);
+            calcMove(y, x, -1, +2, -1, +0);
+            calcMove(y, x, -1, -2, -1, +0);
             break;
         case pieces[5]:
-            if (y == '2' || y == '7') {
+            if ((y == '2' && document.getElementById(id).classList.contains(players[0])) || (y == '7' && document.getElementById(id).classList.contains(players[1]))) {
                 yoff += ((next * -2) + 1) * 2;
                 if (document.getElementById(yoff + '.' + xoff).innerHTML == empty && document.getElementById(String(y + ((next * -2) + 1)) + '.' + xoff).innerHTML == empty) {
                     document.getElementById(yoff + '.' + xoff).classList.add('move');
                 }
             }
-            yoff = y;
-            yoff += (next * -2) + 1;
-            if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
-                document.getElementById(yoff + '.' + xoff).classList.add('move');
-            }
-            xoff += 1;
-            if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
-                document.getElementById(yoff + '.' + xoff).classList.add('move');
-                document.getElementById(yoff + '.' + xoff).classList.add('hit');
-            }
-            xoff = x;
-            xoff -= 1;
-            if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
-                document.getElementById(yoff + '.' + xoff).classList.add('move');
-                document.getElementById(yoff + '.' + xoff).classList.add('hit');
-            }
+            calcMove(y, x, ((next * -2) + 1), +0, -1, +0);
+            calcMove(y, x, ((next * -2) + 1), +1, -1, +0, true);
+            calcMove(y, x, ((next * -2) + 1), -1, -1, +0, true);
             break;
     }
 }
 
-function calcMove(y, x, yz, xz, start = -8, end = 8) {
+function calcMove(y, x, yz, xz, start = -8, end = 8, hit = false) {
     var xoff = x;
     var yoff = y;
     for (let i = start; i < end; i++) {
         xoff += xz;
         yoff += yz;
         if (document.getElementById(yoff + '.' + xoff)) {
+            if (hit) {
+                if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+                    document.getElementById(yoff + '.' + xoff).classList.add('move');
+                    document.getElementById(yoff + '.' + xoff).classList.add('hit');
+                }
+                break;
+            }
             if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
                 document.getElementById(yoff + '.' + xoff).classList.add('move');
             } else if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
@@ -174,105 +184,16 @@ function calcMove(y, x, yz, xz, start = -8, end = 8) {
     }
 }
 
-function setCell(id, to, name, add = true) {
-    document.getElementById(id).innerHTML = name;
-    if (add) {
-        document.getElementById(id).classList.add(to);
-    } else {
-        document.getElementById(id).classList.remove(to);
-    }
-}
-
-function sweep(id) {
-    if (document.getElementById(id).classList.contains('hidden') && !document.getElementById(id).classList.contains('flagged') && game == 0) {
-        if (bombIds.includes(id)) {
-            lose();
-        } else {
-            var bombCount = parseInt(document.getElementById(id).classList[1].split('cell')[1]);
-            document.getElementById(id).innerHTML = bombCount;
-            if (bombCount == 0) {
-                checkEmpty(id);
-            }
-            document.getElementById(id).classList.remove('hidden');
-        }
-        console.log(id)
-    }
-}
-
-function flag(id) {
-    if (document.getElementById(id).classList.contains('hidden') && game == 0) {
-        if (!document.getElementById(id).classList.contains('flagged') && placedFlags < placedBombs) {
-            document.getElementById(id).classList.add('flagged');
-            document.getElementById(id).innerHTML = flagIcon;
-            placedFlags += 1;
-            if (placedFlags == placedBombs) {
-                winCheck();
-            }
-        } else if (document.getElementById(id).classList.contains('flagged') && placedFlags <= placedBombs) {
-            document.getElementById(id).classList.remove('flagged');
-            document.getElementById(id).innerHTML = hiddenIcon;
-            placedFlags -= 1;
-        }
-        document.getElementById('bombsleft').innerHTML = document.getElementById('bombsleft').innerHTML.split(': ')[0] + ': ' + (placedBombs - placedFlags)
-    }
-}
-
-function checkBombs(id) {
-    var bombCount = 0;
-    var row = parseInt(id.split('.')[0]);
-    var col = parseInt(id.split('.')[1]);
-    for (let rowOff = -1; rowOff < 2; rowOff++) {
-        for (let colOff = -1; colOff < 2; colOff++) {
-            if (bombIds.includes(String(row + rowOff) + '.' + String(col + colOff))) {
-                console.log(String(row + rowOff) + '.' + String(col + colOff))
-                bombCount += 1;
-            }
-        }
-    }
-    return bombCount;
-}
-
-function checkEmpty(id) {
-    if (!clearIds.includes(id)) {
-        clearIds.push(id);
-        let empties = [];
-        var row = parseInt(id.split('.')[0]);
-        var col = parseInt(id.split('.')[1]);
-        for (let rowOff = -1; rowOff < 2; rowOff++) {
-            for (let colOff = -1; colOff < 2; colOff++) {
-                console.log('id: ' + id)
-                console.log(colOff)
-                console.log(rowOff)
-                var current = String(row + rowOff) + '.' + String(col + colOff)
-                console.log('checking: ' + current)
-                if (document.getElementById(current)) {
-                    if (document.getElementById(current).classList.contains('hidden') && current != id) {
-                        empties.push(current);
-                        console.log('empty: ' + current)
-                        sweep(current);
-                    }
-                }
-            }
-        }
-        console.log(empties)
-    }
-
-}
-
 function setBoard() {
     document.getElementById('board').innerHTML = '';
-    game = 0;
     clearIds = [];
     next = 0;
+    document.getElementById('gamestate').innerHTML = p2word[next] + ' is next.';
     for (let i = 8; i > 0; i--) {
         const tr = document.createElement("tr");
         tr.id = "r" + String(i);
         document.getElementById('board').appendChild(tr);
-        if (next == 0) {
-            next = 1;
-        } else {
-            next = 0;
-        }
+        next = next ^ 1;
         for (let j = 1; j < 9; j++) {
             const td = document.createElement("td");
             td.innerHTML = empty;
@@ -306,67 +227,28 @@ function setBoard() {
 }
 
 function winCheck() {
-    var points = 0;
-    for (let i = 0; i < placedBombs; i++) {
-        if (document.getElementsByClassName('bomb')[i].classList.contains('flagged')) {
-            points += 1;
+    var winner = 2;
+    for (let i = 0; i < document.getElementsByClassName(players[0]).length; i++) {
+        if (document.getElementsByClassName(players[0])[i].innerHTML == pieces[0]) {
+            winner -= 2;
+            break;
         }
     }
-    if (points == placedBombs) {
-        game = 1;
-        document.getElementById('bombsleft').innerHTML = 'Won. ' + document.getElementById('bombsleft').innerHTML;
-    }
-}
-
-function lose() {
-    game = -1;
-    document.getElementById('bombsleft').innerHTML = 'Lost. ' + document.getElementById('bombsleft').innerHTML;
-    for (let i = 0; 0 < document.getElementsByClassName('bomb').length; i++) {
-        var current = document.getElementsByClassName('bomb')[i];
-        current.classList.remove('hidden');
-        if (current.classList.contains('flagged')) {
-            current.classList.remove('flagged');
-        }
-        if (bombIds.includes(current.id)) {
-            current.innerHTML = bombIcon;
-        } else {
-            current.innerHTML = parseInt(current.classList[0].split('cell')[1]);
+    for (let i = 0; i < document.getElementsByClassName(players[1]).length; i++) {
+        if (document.getElementsByClassName(players[1])[i].innerHTML == pieces[0]) {
+            winner -= 1;
+            break;
         }
     }
-}
-
-
-
-//          ---------dev---------
-
-
-
-function showAll() {
-    while (0 < document.getElementsByClassName('hidden').length) {
-        var current = document.getElementsByClassName('hidden')[0];
-        current.classList.remove('hidden');
-        if (current.classList.contains('flagged')) {
-            current.classList.remove('flagged');
-        }
-        if (bombIds.includes(current.id)) {
-            current.innerHTML = bombIcon;
-        } else {
-            current.innerHTML = parseInt(current.classList[0].split('cell')[1]);
-        }
+    if (winner == -1) {
+        //no win
+        return;
     }
-}
-
-function autoSolve() {
-    for (let i = 0; i < placedBombs; i++) {
-        if (!document.getElementsByClassName('bomb')[i].classList.contains('flagged')) {
-            document.getElementsByClassName('bomb')[i].classList.add('flagged');
-            document.getElementsByClassName('bomb')[i].innerHTML = flagIcon;
-            placedFlags += 1;
-        }
+    if (winner == 2) {
+        //tie
+    } else {
+        won = winner;
+        document.getElementById('gamestate').innerHTML = p2word[won] + ' won.';
     }
-    winCheck();
-}
-
-function startHelp() {
-    sweep(document.getElementsByClassName('cell0')[Math.floor(Math.random() * document.getElementsByClassName('cell0').length)].id)
+    deselect();
 }
