@@ -10,17 +10,10 @@ const p2word = ['White', 'Black'];
 
 var next = 0;
 var won = -1;
-var clearIds = [];
-var bombIds = [];
-var placedBombs = 0;
-var placedFlags = 0;
 
 document.addEventListener("contextmenu", function(e) {
     if (e.originalTarget.localName == 'td') {
         e.preventDefault();
-        if (e.target.attributes.class.value.includes('hidden')) {
-            flag(e.target.attributes.id.value);
-        }
     }
 }, false);
 
