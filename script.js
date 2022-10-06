@@ -150,22 +150,22 @@ function calcMoves(id) {
                     document.getElementById(yoff + '.' + xoff).classList.add('move');
                 }
             }
-            calcMove(y, x, ((next * -2) + 1), +0, -1, +0);
-            calcMove(y, x, ((next * -2) + 1), +1, -1, +0, true);
-            calcMove(y, x, ((next * -2) + 1), -1, -1, +0, true);
+            calcMove(y, x, ((next * -2) + 1), +0, -1, +0, 0);
+            calcMove(y, x, ((next * -2) + 1), +1, -1, +0, 1);
+            calcMove(y, x, ((next * -2) + 1), -1, -1, +0, 1);
             break;
     }
 }
 
-function calcMove(y, x, yz, xz, start = -8, end = 8, hit = false) {
+function calcMove(y, x, yz, xz, start = -8, end = 8, hit = -1) {
     var xoff = x;
     var yoff = y;
     for (let i = start; i < end; i++) {
         xoff += xz;
         yoff += yz;
         if (document.getElementById(yoff + '.' + xoff)) {
-            if (hit) {
-                if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+            if (hit == 1) {
+                if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next ^ 1])) {
                     document.getElementById(yoff + '.' + xoff).classList.add('move');
                     document.getElementById(yoff + '.' + xoff).classList.add('hit');
                 }
@@ -173,7 +173,7 @@ function calcMove(y, x, yz, xz, start = -8, end = 8, hit = false) {
             }
             if (document.getElementById(yoff + '.' + xoff).innerHTML == empty) {
                 document.getElementById(yoff + '.' + xoff).classList.add('move');
-            } else if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next - 1]) || document.getElementById(yoff + '.' + xoff).classList.contains(players[next + 1])) {
+            } else if (document.getElementById(yoff + '.' + xoff).classList.contains(players[next ^ 1]) && hit == -1) {
                 document.getElementById(yoff + '.' + xoff).classList.add('move');
                 document.getElementById(yoff + '.' + xoff).classList.add('hit');
                 break;
